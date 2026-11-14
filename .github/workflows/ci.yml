@@ -1,0 +1,72 @@
+name: CI
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    name: tests (python ${{ matrix.python }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        include:
+          - os: macos-latest
+            python: "3.13"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+          allow-prereleases: true
+      - run: python -m pip install . pytest
+      - run: python -m pytest -q
+      - run: pullrot --version
+
+  live:
+    name: live registry checks (Docker Hub, registry.k8s.io, ECR Public, quay.io)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: python -m pip install . pytest
+      - run: PULLROT_LIVE=1 python -m pytest -v tests/test_live.py
+      - run: pullrot ratelimit
+      - name: scan the example repo against the real registries
+        run: |
+          pullrot scan examples/shop --online --fail-on never | tee scan.txt
+          grep -q "Confirmed by the registry" scan.txt
+
+  action:
+    name: GitHub Action on the example repo
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./
+        with:
+          path: examples/shop
+          fail-on: never
+          args: --min-severity warn
+
+  install:
+    name: one-line install from GitHub
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: pipx install "git+https://github.com/${{ github.repository }}@${{ github.sha }}"
+      - run: pullrot --version && pullrot check registry.k8s.io/pause:3.10

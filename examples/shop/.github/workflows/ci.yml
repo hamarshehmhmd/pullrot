@@ -1,0 +1,17 @@
+name: ci
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: node:20
+    services:
+      postgres:
+        image: postgres:16
+      redis:
+        image: redis
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm test
+      - uses: docker://hadolint/hadolint:v2.12.0
+        with:
+          args: hadolint api/Dockerfile

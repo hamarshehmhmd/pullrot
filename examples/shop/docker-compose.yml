@@ -1,0 +1,9 @@
+services:
+  api:
+    build: ./api
+  db:
+    image: bitnami/postgresql:16.3.0-debian-12-r14
+  cache:
+    image: "docker.io/bitnami/redis:7.2.5"
+  search:
+    image: elasticsearch:8.14.1

@@ -1,0 +1,15 @@
+# .github/workflows/pullrot.yml
+name: pullrot
+on:
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1"   # weekly: tags disappear without a commit
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: hamarshehmhmd/pullrot@v0.1.0
+        with:
+          online: true       # HEAD each image, no pulls used
+          fail-on: error

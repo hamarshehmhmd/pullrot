@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shop
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: wait
+          image: k8s.gcr.io/busybox:1.27
+      containers:
+        - name: api
+          image: ghcr.io/acme/shop-api:2.4.1
+        - name: metrics
+          image: quay.io/prometheus/node-exporter:v1.8.2
