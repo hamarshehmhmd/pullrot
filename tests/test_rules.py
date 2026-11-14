@@ -97,3 +97,19 @@ def test_online_checks_each_reference_once():
     calls = []
     online(evaluate_all(occs), occs, lambda r: calls.append(r) or Check("ok"))
     assert len(calls) == 1
+
+
+def test_online_untagged_and_placeholder_are_warnings():
+    occs = scan_text("image:\n  a:\n    image: quay.io/jetstack/cert-manager-webhook\n    version: v1.9.1\n"
+                     "  b:\n    image: k8s.gcr.io/external-dns/external-dns\n  c:\n    image: controller:latest\n",
+                     "values.yaml")
+    status = {"quay.io/jetstack/cert-manager-webhook:latest": Check("missing-tag", "tag 'latest' not found"),
+              "k8s.gcr.io/external-dns/external-dns:latest": Check("missing-tag", "tag 'latest' not found"),
+              "docker.io/library/controller:latest": Check("missing-repo", "repository not found")}
+    fs = online(evaluate_all(occs), occs, lambda r: status[r.canonical()])
+    got = sorted((f.rule, f.severity, f.occ.ref.short()) for f in fs if f.rule.startswith("PR5") or f.rule == "PR201")
+    assert got == [("PR201", "warn", "k8s.gcr.io/external-dns/external-dns"),
+                   ("PR501", "warn", "controller:latest"),
+                   ("PR501", "warn", "k8s.gcr.io/external-dns/external-dns"),
+                   ("PR501", "warn", "quay.io/jetstack/cert-manager-webhook")]
+    assert "placeholder" in [f for f in fs if f.occ.ref.name == "controller" and f.rule == "PR501"][0].message

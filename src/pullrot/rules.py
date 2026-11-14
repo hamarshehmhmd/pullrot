@@ -135,6 +135,19 @@ def online(findings: list[Finding], occs: list[Occurrence], checker, cache: dict
             cache[key] = checker(o.ref)
         c = cache[key]
         mine = by_occ.get(id(o), [])
+        untagged = o.ref.tag is None and o.ref.digest is None
+        if c.status == "missing-tag" and untagged:
+            extra.append(Finding(
+                "PR501", "warn",
+                f"{o.ref.short()} has no tag and ':latest' doesn't exist on the registry: it fails as written. "
+                f"Fine if the tag is set elsewhere (e.g. a separate version/tag key).", o))
+            continue
+        if c.status == "missing-repo" and o.ref.is_official:
+            extra.append(Finding(
+                "PR501", "warn",
+                f"docker.io/{o.ref.repository} doesn't exist: a typo, or a placeholder that gets replaced at build "
+                f"time (like kubebuilder's 'controller:latest').", o))
+            continue
         if c.status in ("missing-tag", "missing-repo"):
             known = [f for f in mine if f.rule in ("PR101", "PR201", "PR402")]
             if known:

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pullrot"
-version = "0.1.0"
+version = "0.1.1"
 description = "Find container image references that will fail to pull: removed Bitnami tags, frozen k8s.gcr.io, deprecated images, anonymous Docker Hub pulls in CI, and tags that no longer exist. Then fix them."
 readme = "README.md"
 requires-python = ">=3.10"

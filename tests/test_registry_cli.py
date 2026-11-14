@@ -105,7 +105,7 @@ def test_version(capsys):
     import pytest
     with pytest.raises(SystemExit):
         main(["--version"])
-    assert "pullrot 0.1.0" in capsys.readouterr().out
+    assert "pullrot 0.1.1" in capsys.readouterr().out
 
 
 def test_github_format_paths_relative_to_cwd(shop, capsys, monkeypatch):

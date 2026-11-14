@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: hamarshehmhmd/pullrot@v0.1.0
+      - uses: hamarshehmhmd/pullrot@v0.1.1
         with:
           online: true       # HEAD each image, no pulls used
           fail-on: error

@@ -92,7 +92,7 @@ Templated values (`{{ .Values.x }}`, `${{ matrix.image }}`, unresolved `$VAR`) a
 | PR301 | warn | Docker Hub image pulled anonymously in CI (no `docker/login-action` / `docker login` in that file). Fix (opt-in): `public.ecr.aws/docker/library/*` or `mirror.gcr.io/library/*` for official images |
 | PR401 | info | no tag / `:latest` and no digest |
 | PR402 | warn | deprecated Docker official image (`openjdk`, `java`, `centos`, `jenkins`, `django`, `rails`, `iojs`, `sentry`, `owncloud`, `celery`) with the replacement Docker points to |
-| PR501 | error | `--online`: tag/digest or repository not found (or private) |
+| PR501 | error / warn | `--online`: tag/digest or repository not found (or private). Warn instead of error when the reference has no tag (the tag is often a separate `version:` key) or is a non-existent `docker.io/library/*` name (placeholders like kubebuilder's `controller:latest`) |
 | PR502 / PR503 | warn / info | `--online`: registry rate-limited us / couldn't reach it |
 
 With `--online`, a missing tag on a PR101/PR201/PR402 reference upgrades that finding to an error marked
@@ -130,7 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: hamarshehmhmd/pullrot@v0.1.0
+      - uses: hamarshehmhmd/pullrot@v0.1.1
         with:
           online: true       # HEAD each image, no pulls used
           fail-on: error     # error | warn | info | never
