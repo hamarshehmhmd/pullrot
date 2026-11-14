@@ -51,7 +51,10 @@ def cmd_scan(a) -> int:
         lvl = {"error": "error", "warn": "warning", "info": "notice"}
         for f in findings:
             msg = f.message + (f" Suggested: {f.suggestion}" if f.suggestion else "")
-            print(f"::{lvl[f.severity]} file={f.occ.path},line={f.occ.line},title={f.rule} {f.occ.ref.short()}::{msg}")
+            # annotations need paths relative to the workspace root, not to the scanned dir
+            fpath = os.path.relpath(os.path.join(base, f.occ.path)) if base else f.occ.path
+            fpath = fpath.replace(os.sep, "/")
+            print(f"::{lvl[f.severity]} file={fpath},line={f.occ.line},title={f.rule} {f.occ.ref.short()}::{msg}")
         print(f"pullrot: {len(occs)} image references, {counts['error']} errors, {counts['warn']} warnings, {counts['info']} notes")
     else:
         last = None

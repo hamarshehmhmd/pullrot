@@ -67,8 +67,9 @@ def test_scan_text_and_fail_on(shop, capsys):
     assert main(["scan", str(shop / "deploy"), "--fail-on", "warn"]) == 1
 
 
-def test_scan_github_format(shop, capsys):
-    main(["scan", str(shop), "--format", "github", "--min-severity", "warn"])
+def test_scan_github_format(shop, capsys, monkeypatch):
+    monkeypatch.chdir(shop)
+    main(["scan", ".", "--format", "github", "--min-severity", "warn"])
     out = capsys.readouterr().out
     assert "::error file=docker-compose.yml,line=5,title=PR101 bitnami/postgresql:16.3.0-debian-12-r14::" in out
     assert "::warning file=.github/workflows/ci.yml,line=6,title=PR301 node:20::" in out
@@ -105,3 +106,9 @@ def test_version(capsys):
     with pytest.raises(SystemExit):
         main(["--version"])
     assert "pullrot 0.1.0" in capsys.readouterr().out
+
+
+def test_github_format_paths_relative_to_cwd(shop, capsys, monkeypatch):
+    monkeypatch.chdir(shop.parent)
+    main(["scan", "shop/deploy", "--format", "github"])
+    assert "::warning file=shop/deploy/k8s/app.yaml,line=10,title=PR201" in capsys.readouterr().out
